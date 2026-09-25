@@ -1,0 +1,52 @@
+import { NextResponse } from "next/server";
+import { generateImage } from "../../../Lib/Providers";
+
+export async function POST(request: Request) {
+  try {
+    const body = await request.json();
+
+    const product = body?.product || "";
+    const price = body?.price || "";
+    const prompt = body?.prompt || "";
+
+    if (!product || !prompt) {
+      return NextResponse.json(
+        { error: "Produto e prompt são obrigatórios." },
+        { status: 400 }
+      );
+    }
+
+    const fullPrompt = `
+Crie uma imagem publicitária profissional para venda.
+
+Produto: ${product}
+Preço: ${price}
+
+Instruções:
+${prompt}
+
+A imagem deve ser moderna, comercial e adequada para redes sociais.
+`;
+
+    const imageUrl = await generateImage(fullPrompt);
+
+    if (!imageUrl) {
+      return NextResponse.json(
+        { error: "A API não devolveu uma imagem." },
+        { status: 502 }
+      );
+    }
+
+    return NextResponse.json({ imageUrl });
+  } catch (error) {
+    return NextResponse.json(
+      {
+        error:
+          error instanceof Error
+            ? error.message
+            : "Erro ao gerar imagem.",
+      },
+      { status: 500 }
+    );
+  }
+}
